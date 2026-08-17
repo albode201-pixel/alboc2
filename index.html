@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+    <title>Gram Earn - Mini App</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js">
+    </script>
+
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px 16px 100px 16px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, #0088cc, #00b4d8);
+            color: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .header .subtitle {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .balance-display {
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 12px;
+        }
+
+        .balance-display span {
+            font-weight: bold;
+        }
+
+        #balance {
+            font-size: 28px;
+        }
+
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+
+        .stat-card:active {
+            transform: scale(0.95);
+        }
+
+        .stat-icon {
+            font-size: 20px;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin: 2px 0;
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--tg-theme-hint-color, #666);
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: transform 0.2s;
+        }
+
+        .card:active {
+            transform: scale(0.99);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .card h3 {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card .badge {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        .card p {
+            color: var(--tg-theme-hint-color, #666);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 4px 0;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background: var(--tg-theme-destructive-text-color, #ff3b30);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-color, #0088cc);
+        }
+
+        .btn-outline:hover {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            opacity: 0.9;
+        }
+
+        /* ===== TASK LIST ===== */
+        .task-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--tg-theme-bg-color, #fff);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.3s;
+        }
+
+        .task-item.completed {
+            opacity: 0.5;
+        }
+
+        .task-item.completed .task-title {
+            text-decoration: line-through;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .task-desc {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #666);
+        }
+
+        .task-reward {
+            background: var(--tg-theme-button-color, #0088cc);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* ===== REFERRAL ===== */
+        .referral-link-box {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .referral-link-box input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid var(--tg-theme-button-color, #0088cc);
+            border-radius: 10px;
+            font-size: 14px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+        }
+
+        .referral-link-box .btn {
+            width: auto;
+            padding: 10px 16px;
+        }
+
+        .referral-progress {
+            margin-top: 12px;
+        }
+
+        .referral-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--tg-theme-bg-color, #fff);
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .referral-item .progress {
+            color: var(--tg-theme-hint-color, #666);
+            font-size: 12px;
+        }
+
+        .referral-item .completed-badge {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* ===== WITHDRAWAL ===== */
+        .withdraw-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--tg-theme-button-color, #0088cc);
+            border-radius: 10px;
+            font-size: 16px;
+            margin: 8px 0;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+        }
+
+        .withdraw-input:focus {
+            border-color: #0066aa;
+        }
+
+        /* ===== MESSAGES ===== */
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin: 8px 0;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .message.hidden {
+            display: none;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--tg-theme-secondary-bg-color, #e0e0e0);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 4px 0;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: var(--tg-theme-button-color, #0088cc);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* ===== CLOSE BUTTON ===== */
+        .close-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--tg-theme-destructive-text-color, #ff3b30);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+        }
+
+        .close-btn:active {
+            transform: scale(0.97);
+        }
+
+        /* ===== ADMIN PANEL ===== */
+        .admin-panel {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+            border: 2px dashed var(--tg-theme-button-color, #0088cc);
+        }
+
+        .admin-panel h4 {
+            margin-bottom: 12px;
+            color: var(--tg-theme-text-color, #000);
+        }
+
+        .admin-control {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .admin-control label {
+            font-size: 14px;
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .admin-control input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid var(--tg-theme-button-color, #0088cc);
+            border-radius: 8px;
+            font-size: 14px;
+            background: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+            min-width: 60px;
+        }
+
+        .admin-control input:focus {
+            border-color: #0066aa;
+        }
+
+        .admin-control .btn {
+            width: auto;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        /* ===== DARK MODE ===== */
+        @media (prefers-color-scheme: dark) {
+            .message.success {
+                background: #1e3a2a;
+                color: #8fdfb4;
+            }
+            .message.error {
+                background: #3a1e1e;
+                color: #f8a5a5;
+            }
+            .message.info {
+                background: #1a2a3a;
+                color: #8fcdf8;
+            }
+            .task-item {
+                background: var(--tg-theme-bg-color, #1a1a1a);
+            }
+            .referral-item {
+                background: var(--tg-theme-bg-color, #1a1a1a);
+            }
+            .admin-panel {
+                background: var(--tg-theme-secondary-bg-color, #2a2a2a);
+            }
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse {
+            animation: pulse 0.3s ease;
+        }
+
+        /* ===== BOTTOM NAV ===== */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-top: 1px solid var(--tg-theme-hint-color, #ccc);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 4px 12px 4px;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: transparent;
+            border: none;
+            font-size: 10px;
+            color: var(--tg-theme-hint-color, #666);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            flex: 1;
+            max-width: 70px;
+        }
+
+        .bottom-nav .nav-item .nav-icon {
+            font-size: 22px;
+            margin-bottom: 2px;
+        }
+
+        .bottom-nav .nav-item.active {
+            color: var(--tg-theme-button-color, #0088cc);
+            background: var(--tg-theme-bg-color, #fff);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .bottom-nav .nav-item.admin-hidden {
+            display: none;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 380px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .bottom-nav .nav-item {
+                max-width: 60px;
+                font-size: 9px;
+            }
+            .bottom-nav .nav-item .nav-icon {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ===== HEADER ===== -->
+        <div class="header">
+            <h1>💰 Gram Earn</h1>
+            <div class="subtitle">Watch ads • Invite friends • Earn rewards</div>
+            <div class="balance-display">
+                Balance: <span id="balance">0</span> Gram
+            </div>
+        </div>
+
+        <!-- ===== STATS ===== -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-icon">📺</span>
+                <span class="stat-value" id="ads-count">0</span>
+                <span class="stat-label">Ads Watched</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">👥</span>
+                <span class="stat-value" id="referrals-count">0</span>
+                <span class="stat-label">Referrals</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">✅</span>
+                <span class="stat-value" id="completed-refs">0</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">⏳</span>
+                <span class="stat-value" id="pending-refs">0</span>
+                <span class="stat-label">Pending</span>
+            </div>
+        </div>
+
+        <!-- ===== TAB CONTENT ===== -->
+
+        <!-- TAB 1: EARN -->
+        <div id="tab-earn" class="tab-content active">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📺 Watch Ad</h3>
+                    <span class="badge">+<span id="ad-reward-display">1</span> Gram</span>
+                </div>
+                <p>Watch a short ad and earn Gram tokens instantly!</p>
+                <button class="btn btn-primary" onclick="watchAd()">▶️ Watch Ad Now</button>
+                <div id="ad-message" class="message hidden"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>📊 Your Progress</h3>
+                </div>
+                <div style="margin-bottom: 8px;">
+                    <div style="display:flex; justify-content:space-between; font-size:14px;">
+                        <span>Total Ads: <strong id="progress-ads">0</strong></span>
+                        <span>Referral Progress</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="fill" id="progress-fill" style="width:0%"></div>
+                    </div>
+                </div>
+                <p style="font-size:12px; text-align:center;">
+                    <span id="progress-text">Watch 10 ads to complete referrals</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- TAB 2: TASKS -->
+        <div id="tab-tasks" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 Available Tasks</h3>
+                    <span class="badge">Earn Gram</span>
+                </div>
+                <div id="task-list">
+                    <p style="text-align:center; color:var(--tg-theme-hint-color, #666);">
+                        Loading tasks...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: REFERRALS -->
+        <div id="tab-referrals" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>👥 Invite Friends</h3>
+                    <span class="badge">+<span id="referral-bonus-display">5</span> Gram</span>
+                </div>
+                <p>
+                    Invite friends to join! You get <strong id="referral-bonus-display2">5</strong> Gram
+                    when they watch <strong id="required-ads-display">10</strong> ads.
+                </p>
+
+                <div class="referral-link-box">
+                    <input type="text" id="referral-link-input" readonly>
+                    <button class="btn btn-primary btn-sm" onclick="copyReferralLink()">📋 Copy</button>
+                </div>
+
+                <button class="btn btn-success" onclick="shareReferral()">
+                    📤 Share with Friends
+                </button>
+
+                <div id="referral-message" class="message hidden"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>📊 Your Referrals</h3>
+                    <span class="badge" id="referral-count-badge">0</span>
+                </div>
+                <div id="referral-list">
+                    <p style="text-align:center; color:var(--tg-theme-hint-color, #666);">
+                        No referrals yet. Share your link!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: WITHDRAW -->
+        <div id="tab-withdraw" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>💳 Withdraw</h3>
+                    <span class="badge">Min <span id="min-withdrawal-display">10</span> Gram</span>
+                </div>
+                <p>Withdraw your earned Gram tokens to your wallet.</p>
+
+                <label style="font-size:14px; font-weight:500;">Amount (Gram)</label>
+                <input type="number" class="withdraw-input" id="withdraw-amount"
+                placeholder="Enter amount" min="0">
+
+                <label style="font-size:14px; font-weight:500; margin-top:8px; display:block;">
+                    Wallet Address
+                </label>
+                <input type="text" class="withdraw-input" id="wallet-address"
+                placeholder="Enter your wallet address">
+
+                <button class="btn btn-success" onclick="requestWithdrawal()">
+                    💳 Request Withdrawal
+                </button>
+
+                <div id="withdraw-message" class="message hidden"></div>
+
+                <div style="margin-top:12px; padding:12px; background:var(--tg-theme-bg-color, #fff); border-radius:10px;">
+                    <p style="font-size:12px; color:var(--tg-theme-hint-color, #666);">
+                        💡 Minimum withdrawal: <strong id="min-withdrawal-display2">10</strong> Gram<br>
+                        💰 Your balance: <strong id="balance-display-withdraw">0</strong> Gram
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: ADMIN (hidden from normal users) -->
+        <div id="tab-admin" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3>⚙️ Admin Panel</h3>
+                    <span class="badge">Settings</span>
+                </div>
+                <p>Control rewards and task values.</p>
+
+                <div class="admin-panel">
+                    <h4>💰 Reward Settings</h4>
+
+                    <div class="admin-control">
+                        <label>Ad Reward:</label>
+                        <input type="number" id="admin-ad-reward" value="1" min="1">
+                        <button class="btn btn-warning btn-sm" onclick="updateAdReward()">Update</button>
+                    </div>
+
+                    <div class="admin-control">
+                        <label>Referral Bonus:</label>
+                        <input type="number" id="admin-referral-bonus" value="5" min="1">
+                        <button class="btn btn-warning btn-sm" onclick="updateReferralBonus()">Update</button>
+                    </div>
+
+                    <div class="admin-control">
+                        <label>Required Ads:</label>
+                        <input type="number" id="admin-required-ads" value="10" min="1">
+                        <button class="btn btn-warning btn-sm" onclick="updateRequiredAds()">Update</button>
+                    </div>
+
+                    <div class="admin-control">
+                        <label>Min Withdrawal:</label>
+                        <input type="number" id="admin-min-withdrawal" value="10" min="1">
+                        <button class="btn btn-warning btn-sm" onclick="updateMinWithdrawal()">Update</button>
+                    </div>
+                </div>
+
+                <div class="admin-panel" style="margin-top:12px;">
+                    <h4>📋 Task Management</h4>
+
+                    <div class="admin-control">
+                        <label>New Task:</label>
+                        <input type="text" id="admin-task-name" placeholder="Task name" style="flex:1;">
+                    </div>
+                    <div class="admin-control">
+                        <label>Reward:</label>
+                        <input type="number" id="admin-task-reward" placeholder="Reward" style="flex:0.5;">
+                        <button class="btn btn-success btn-sm" onclick="addTask()">➕ Add Task</button>
+                    </div>
+
+                    <div id="admin-task-list" style="margin-top:8px;">
+                        <!-- Tasks will be listed here -->
+                    </div>
+                </div>
+
+                <div id="admin-message" class="message hidden"></div>
+            </div>
+        </div>
+
+        <!-- ===== CLOSE BUTTON ===== -->
+        <button class="close-btn" onclick="closeApp()">❌ Close App</button>
+
+    </div>
+
+    <!-- ===== BOTTOM NAVIGATION ===== -->
+    <div class="bottom-nav" id="bottomNav">
+        <button class="nav-item active" data-tab="earn" onclick="switchTab('earn')">
+            <span class="nav-icon">💰</span>
+            <span>Earn</span>
+        </button>
+        <button class="nav-item" data-tab="tasks" onclick="switchTab('tasks')">
+            <span class="nav-icon">📋</span>
+            <span>Tasks</span>
+        </button>
+        <button class="nav-item" data-tab="referrals" onclick="switchTab('referrals')">
+            <span class="nav-icon">👥</span>
+            <span>Referrals</span>
+        </button>
+        <button class="nav-item" data-tab="withdraw" onclick="switchTab('withdraw')">
+            <span class="nav-icon">💳</span>
+            <span>Withdraw</span>
+        </button>
+        <button class="nav-item admin-hidden" data-tab="admin" onclick="switchTab('admin')" id="adminNavBtn">
+            <span class="nav-icon">⚙️</span>
+            <span>Admin</span>
+        </button>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- ===== JAVASCRIPT (الكامل المعدل) ===== -->
+    <!-- ============================================ -->
+    <script>
+        // ============================================
+        // 1. تهيئة Telegram WebApp مع معالجة الأخطاء
+        // ============================================
+        
+        let tg = null;
+        let isTelegram = false;
+        
+        try {
+            if (window.Telegram && window.Telegram.WebApp) {
+                tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                isTelegram = true;
+                console.log('✅ Telegram WebApp initialized');
+            } else {
+                console.warn('⚠️ Not running in Telegram, using fallback');
+                tg = {
+                    ready: () => {},
+                    expand: () => {},
+                    close: () => { window.close(); },
+                    initDataUnsafe: { user: { id: 1111087186, username: 'admin_user' } }
+                };
+            }
+        } catch(e) {
+            console.error('❌ Telegram init error:', e);
+            tg = {
+                ready: () => {},
+                expand: () => {},
+                close: () => { window.close(); },
+                initDataUnsafe: { user: { id: 1111087186, username: 'admin_user' } }
+            };
+        }
+
+        // ============================================
+        // 2. قائمة الأدمن (تم إضافة معرفك)
+        // ============================================
+        
+        const ADMIN_IDS = [1111087186]; // ✅ تم إضافة معرفك
+        
+        let isAdmin = false;
+        
+        try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                const userId = tg.initDataUnsafe.user.id;
+                if (ADMIN_IDS.includes(userId)) {
+                    isAdmin = true;
+                }
+                console.log('👤 User ID:', userId);
+                console.log('👑 Is Admin:', isAdmin);
+            }
+        } catch (e) {
+            console.error('❌ User ID error:', e);
+        }
+
+        // ============================================
+        // 3. البيانات المخزنة
+        // ============================================
+        
+        let settings = {
+            adReward: 1,
+            referralBonus: 5,
+            requiredAds: 10,
+            minWithdrawal: 10
+        };
+        
+        let userData = {
+            balance: 0,
+            adsWatched: 0,
+            referrals: [],
+            completedTasks: [],
+            userId: null
+        };
+        
+        let tasks = [
+            { id: 1, name: 'Follow on Telegram', reward: 2 },
+            { id: 2, name: 'Join Channel', reward: 3 },
+            { id: 3, name: 'Share Post', reward: 4 }
+        ];
+        
+        // تعيين معرف المستخدم
+        try {
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                userData.userId = tg.initDataUnsafe.user.id;
+            }
+        } catch (e) {}
+        
+        if (!userData.userId) {
+            userData.userId = 'user_' + Math.random().toString(36).substring(2, 8);
+        }
+
+        // ============================================
+        // 4. تحميل وحفظ البيانات
+        // ============================================
+        
+        function saveData() {
+            try {
+                const data = {
+                    settings: settings,
+                    userData: userData,
+                    tasks: tasks
+                };
+                localStorage.setItem('gramEarnData', JSON.stringify(data));
+            } catch (e) {
+                console.error('❌ Save error:', e);
+            }
+        }
+        
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('gramEarnData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    settings = data.settings || settings;
+                    userData = data.userData || userData;
+                    tasks = data.tasks || tasks;
+                    updateUI();
+                    updateTaskList();
+                    updateAdminTaskList();
+                }
+            } catch (e) {
+                console.error('❌ Load error:', e);
+            }
+        }
+
+        // ============================================
+        // 5. تحديث الواجهة
+        // ============================================
+        
+        function updateUI() {
+            const balanceEl = document.getElementById('balance');
+            if (balanceEl) balanceEl.textContent = userData.balance;
+            
+            const balanceWithdraw = document.getElementById('balance-display-withdraw');
+            if (balanceWithdraw) balanceWithdraw.textContent = userData.balance;
+            
+            const adsCount = document.getElementById('ads-count');
+            if (adsCount) adsCount.textContent = userData.adsWatched;
+            
+            const referralsCount = document.getElementById('referrals-count');
+            if (referralsCount) referralsCount.textContent = userData.referrals.length;
+            
+            const progressAds = document.getElementById('progress-ads');
+            if (progressAds) progressAds.textContent = userData.adsWatched;
+            
+            let completed = userData.referrals.filter(r => r.completed).length;
+            let pending = userData.referrals.filter(r => !r.completed).length;
+            
+            const completedRefs = document.getElementById('completed-refs');
+            if (completedRefs) completedRefs.textContent = completed;
+            
+            const pendingRefs = document.getElementById('pending-refs');
+            if (pendingRefs) pendingRefs.textContent = pending;
+            
+            const referralBadge = document.getElementById('referral-count-badge');
+            if (referralBadge) referralBadge.textContent = userData.referrals.length;
+            
+            updateProgress();
+            updateReferralList();
+            
+            const adminAdReward = document.getElementById('admin-ad-reward');
+            if (adminAdReward) adminAdReward.value = settings.adReward;
+            
+            const adminReferralBonus = document.getElementById('admin-referral-bonus');
+            if (adminReferralBonus) adminReferralBonus.value = settings.referralBonus;
+            
+            const adminRequiredAds = document.getElementById('admin-required-ads');
+            if (adminRequiredAds) adminRequiredAds.value = settings.requiredAds;
+            
+            const adminMinWithdrawal = document.getElementById('admin-min-withdrawal');
+            if (adminMinWithdrawal) adminMinWithdrawal.value = settings.minWithdrawal;
+            
+            const adRewardDisplay = document.getElementById('ad-reward-display');
+            if (adRewardDisplay) adRewardDisplay.textContent = settings.adReward;
+            
+            const referralBonusDisplay = document.getElementById('referral-bonus-display');
+            if (referralBonusDisplay) referralBonusDisplay.textContent = settings.referralBonus;
+            
+            const referralBonusDisplay2 = document.getElementById('referral-bonus-display2');
+            if (referralBonusDisplay2) referralBonusDisplay2.textContent = settings.referralBonus;
+            
+            const requiredAdsDisplay = document.getElementById('required-ads-display');
+            if (requiredAdsDisplay) requiredAdsDisplay.textContent = settings.requiredAds;
+            
+            const minWithdrawalDisplay = document.getElementById('min-withdrawal-display');
+            if (minWithdrawalDisplay) minWithdrawalDisplay.textContent = settings.minWithdrawal;
+            
+            const minWithdrawalDisplay2 = document.getElementById('min-withdrawal-display2');
+            if (minWithdrawalDisplay2) minWithdrawalDisplay2.textContent = settings.minWithdrawal;
+            
+            // إظهار/إخفاء لوحة الأدمن
+            const adminNavBtn = document.getElementById('adminNavBtn');
+            const adminTabContent = document.getElementById('tab-admin');
+            if (isAdmin) {
+                if (adminNavBtn) adminNavBtn.classList.remove('admin-hidden');
+                if (adminTabContent) adminTabContent.style.display = 'block';
+            } else {
+                if (adminNavBtn) adminNavBtn.classList.add('admin-hidden');
+                if (adminTabContent) adminTabContent.style.display = 'none';
+            }
+            
+            saveData();
+        }
+        
+        function updateProgress() {
+            const progress = Math.min((userData.adsWatched / settings.requiredAds) * 100, 100);
+            const progressFill = document.getElementById('progress-fill');
+            if (progressFill) progressFill.style.width = progress + '%';
+            
+            const progressText = document.getElementById('progress-text');
+            if (progressText) {
+                progressText.textContent = 
+                    `Watch ${settings.requiredAds} ads to complete referrals (${userData.adsWatched}/${settings.requiredAds})`;
+            }
+        }
+        
+        function updateReferralList() {
+            const list = document.getElementById('referral-list');
+            if (!list) return;
+            
+            if (userData.referrals.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:var(--tg-theme-hint-color, #666);">No referrals yet. Share your link!</p>';
+                return;
+            }
+            
+            list.innerHTML = userData.referrals.map((ref, index) => `
+                <div class="referral-item">
+                    <span>👤 ${ref.name || 'User ' + (index + 1)}</span>
+                    <span class="${ref.completed ? 'completed-badge' : 'progress'}">
+                        ${ref.completed ? '✅ Completed' : `⏳ ${ref.progress || 0}/${settings.requiredAds}`}
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        function updateTaskList() {
+            const list = document.getElementById('task-list');
+            if (!list) return;
+            
+            const completed = userData.completedTasks || [];
+            
+            if (tasks.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:var(--tg-theme-hint-color, #666);">No tasks available.</p>';
+                return;
+            }
+            
+            list.innerHTML = tasks.map(task => {
+                const isCompleted = completed.includes(task.id);
+                return `
+                    <div class="task-item ${isCompleted ? 'completed' : ''}">
+                        <div class="task-info">
+                            <div class="task-title">${task.name}</div>
+                            <div class="task-desc">Reward: ${task.reward} Gram</div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="task-reward">+${task.reward}</span>
+                            <button class
